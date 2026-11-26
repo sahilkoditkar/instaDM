@@ -19,6 +19,7 @@ import android.widget.Toast
 import androidx.activity.OnBackPressedCallback
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.content.ContextCompat
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.updatePadding
@@ -41,6 +42,9 @@ class MainActivity : AppCompatActivity() {
     /** Set after bouncing off a blocked page, so Back can't return to it. */
     private var clearHistoryWhenLoaded = false
     private var lastBlockToastAt = 0L
+
+    /** The page fades in once, the first time it has something to show. */
+    private var revealed = false
 
     /** Times of recent bounces, to stop a redirect loop instead of spinning forever. */
     private val recentBounces = ArrayDeque<Long>()
@@ -87,6 +91,10 @@ class MainActivity : AppCompatActivity() {
 
     @SuppressLint("SetJavaScriptEnabled")
     private fun createWebView(): WebView = WebView(this).apply {
+        // Match the app's light/dark background so there's no white flash,
+        // and start invisible until the page has painted (see onPageCommitVisible).
+        setBackgroundColor(ContextCompat.getColor(this@MainActivity, R.color.background))
+        alpha = 0f
         settings.javaScriptEnabled = true // Instagram's site needs it.
         settings.domStorageEnabled = true
         settings.setSupportMultipleWindows(false) // target=_blank stays in this policy.
@@ -160,7 +168,12 @@ class MainActivity : AppCompatActivity() {
             }
         }
 
+        override fun onPageCommitVisible(view: WebView, url: String?) {
+            reveal(view)
+        }
+
         override fun onPageFinished(view: WebView, url: String?) {
+            reveal(view) // in case onPageCommitVisible didn't fire
             pendingFallbackJs?.let { view.evaluateJavascript(it, null) }
             if (clearHistoryWhenLoaded && UrlPolicy.decide(url) == UrlPolicy.Decision.ALLOW) {
                 clearHistoryWhenLoaded = false
@@ -194,6 +207,12 @@ class MainActivity : AppCompatActivity() {
                 false
             }
         }
+    }
+
+    private fun reveal(view: WebView) {
+        if (revealed) return
+        revealed = true
+        view.animate().alpha(1f).setDuration(220).start()
     }
 
     private fun bounceToInbox(view: WebView) {

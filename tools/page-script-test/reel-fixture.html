@@ -1,0 +1,24 @@
+<!doctype html><html><head><meta name="viewport" content="width=device-width,initial-scale=1"><style>
+body{margin:0;font-family:sans-serif}
+#thread{height:100vh;overflow-y:auto}
+#thread .msg{height:120px;border-bottom:1px solid #ccc}
+#thread video{width:60vw;height:30vh;background:#333;display:block}
+#viewer{position:fixed;inset:0;background:#000;overflow-y:scroll;scroll-snap-type:y mandatory;display:none}
+#viewer section{height:100vh;scroll-snap-align:start}
+#viewer video{width:100vw;height:100vh;display:block;background:#222}
+main{display:block}
+</style></head><body>
+<main id="main"><div id="thread">
+<div class="msg">hi</div><div class="msg"><video></video></div>
+<div class="msg">a</div><div class="msg">b</div><div class="msg">c</div><div class="msg">d</div><div class="msg">e</div><div class="msg">f</div>
+</div></main>
+<div id="viewer"><section><video></video></section><section><video></video></section><section><video></video></section></div>
+<script>
+window.jsSwipes = 0;
+// Instagram-like JS swipe handler on the viewer, on top of native scrolling.
+var y0 = null;
+document.getElementById('viewer').addEventListener('touchstart', function (e) { y0 = e.touches[0].clientY; });
+document.getElementById('viewer').addEventListener('touchmove', function (e) {
+  if (y0 !== null && Math.abs(e.touches[0].clientY - y0) > 50) { window.jsSwipes++; y0 = null; }
+});
+</script></body></html>
