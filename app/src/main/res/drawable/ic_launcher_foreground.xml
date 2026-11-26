@@ -1,14 +1,18 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- A plain speech bubble on the 108dp adaptive-icon canvas (safe zone 18..90). -->
+<!-- Rounded-square outline with a paper plane inside, inside the 66dp safe zone. -->
 <vector xmlns:android="http://schemas.android.com/apk/res/android"
     android:width="108dp"
     android:height="108dp"
     android:viewportWidth="108"
     android:viewportHeight="108">
     <path
-        android:fillColor="#FFFFFF"
-        android:pathData="M54,30C40.2,30 29,39.9 29,52.1C29,58.8 32.4,64.8 37.8,68.9L35.5,78L45.1,72.9C47.9,73.8 50.9,74.2 54,74.2C67.8,74.2 79,64.3 79,52.1C79,39.9 67.8,30 54,30Z" />
+        android:strokeColor="#FFFFFFFF"
+        android:strokeWidth="5"
+        android:pathData="M44,31H64A13,13 0,0 1,77 44V64A13,13 0,0 1,64 77H44A13,13 0,0 1,31 64V44A13,13 0,0 1,44 31Z" />
     <path
-        android:fillColor="#3D5AFE"
-        android:pathData="M43,52m-3.5,0a3.5,3.5 0,1 1,7 0a3.5,3.5 0,1 1,-7 0M54,52m-3.5,0a3.5,3.5 0,1 1,7 0a3.5,3.5 0,1 1,-7 0M65,52m-3.5,0a3.5,3.5 0,1 1,7 0a3.5,3.5 0,1 1,-7 0" />
+        android:strokeColor="#FFFFFFFF"
+        android:strokeWidth="3.2"
+        android:strokeLineJoin="round"
+        android:strokeLineCap="round"
+        android:pathData="M42,52.5L66,42.5L58,66L53.5,56.5Z M53.5,56.5L66,42.5" />
 </vector>
