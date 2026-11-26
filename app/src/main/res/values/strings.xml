@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">InstaDM</string>
+    <string name="blocked_toast">Only DMs here. That page is blocked.</string>
+    <string name="no_browser">No browser found to open that link.</string>
+    <string name="redirect_loop">Instagram keeps redirecting away from DMs. Reopen the app to try again.</string>
+</resources>
