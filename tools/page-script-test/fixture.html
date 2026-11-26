@@ -1,0 +1,46 @@
+<!doctype html><html><head><meta name="viewport" content="width=device-width"><style>
+body{margin:0;font-family:sans-serif}
+.fixed-bottom{position:fixed;bottom:0;left:0;right:0;background:#eee}
+.sticky-top{position:sticky;top:0;background:#fff}
+.backdrop{position:fixed;inset:0;background:rgba(0,0,0,.5)}
+.thread{position:fixed;inset:60px 0 0 0;overflow:auto}
+</style></head><body>
+<!-- 1: fixed bottom banner with close X -->
+<div id="c1" class="fixed-bottom"><span>Instagram is better in the app</span> <a id="c1open" href="intent://x">Open</a> <button aria-label="Close" id="c1x">x</button></div>
+
+<!-- 3: sticky DM thread header: back (icon), name link, info (icon), plus an Open app button -->
+<header id="c3" class="sticky-top"><a id="c3back" href="/direct/inbox/" aria-label="Back"><svg width="10" height="10"></svg></a>
+<a id="c3name" href="/direct/t/1/">Alex</a> <button id="c3info" aria-label="Conversation information"><svg width="10" height="10"></svg></button>
+<button id="c3open">Open app</button></header>
+
+<!-- nav links (hidden by CSS) + a DM link that must stay -->
+<nav><a id="navhome" href="/">Home</a><a id="navreels" href="/reels/">Reels</a><a id="navexplore" href="/explore/">Explore</a><a id="navdm" href="/direct/inbox/">Messages</a></nav>
+
+<!-- 4: chat bubble mentioning the app, not pinned -->
+<div id="c4" role="row"><div>you should open the app and check this</div></div>
+
+<!-- 7: fixed full-screen thread containing a short message + composer -->
+<div id="c7" class="thread"><div id="c7msg">get the app lol</div><textarea id="c7box">use the app</textarea></div>
+
+<!-- 8: fixed thread with lots of text, no composer -->
+<div id="c8" class="thread" style="inset:auto"><div>Open the app pls</div><div>Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident.</div></div>
+
+<!-- 9: an unrelated dialog (no app text) must stay -->
+<div id="c9" role="dialog" class="backdrop" style="background:none"><p>Turn on notifications?</p><button>Turn on</button><button>Not now</button></div>
+
+<script>
+window.dismissClicks = 0;
+// 6: dynamic dialog with backdrop, added later, with "Not now" that removes it
+setTimeout(function () {
+  var bd = document.createElement('div'); bd.id = 'c6'; bd.className = 'backdrop';
+  bd.innerHTML = '<div role="dialog" id="c6d"><h2>See this post in the app</h2><button id="c6open">Open Instagram</button><button id="c6not">Not now</button></div>';
+  document.body.appendChild(bd);
+  document.getElementById('c6not').onclick = function () { window.dismissClicks++; bd.remove(); };
+}, 600);
+// 10: dynamic dialog whose dismiss does nothing -> must be hidden by us
+setTimeout(function () {
+  var bd = document.createElement('div'); bd.id = 'c10'; bd.className = 'backdrop';
+  bd.innerHTML = '<div role="dialog"><p>Use the app for the best experience</p><button id="c10x" aria-label="Close">x</button></div>';
+  document.body.appendChild(bd);
+}, 900);
+</script></body></html>

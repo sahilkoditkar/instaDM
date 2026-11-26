@@ -100,32 +100,26 @@ class MainActivity : AppCompatActivity() {
         CookieManager.getInstance().setAcceptCookie(true)
         CookieManager.getInstance().setAcceptThirdPartyCookies(this, true)
 
-        installNavHidingCss(this)
+        installPageScript(this)
         webViewClient = PolicyClient()
         webChromeClient = Chrome()
     }
 
     /**
-     * Hides the Home, Explore and Reels buttons so there is nothing tempting
-     * to tap. Cosmetic only: if Instagram renames things, [UrlPolicy] still
-     * blocks the pages themselves.
+     * Injects assets/instadm-page.js into Instagram's pages: hides the Home,
+     * Explore and Reels buttons and removes "Open the app" banners and
+     * pop-ups. Cosmetic only: if Instagram changes its page, [UrlPolicy]
+     * still blocks everything outside DMs.
      */
-    private fun installNavHidingCss(view: WebView) {
-        val css = """
-            a[href="/"], a[href="/explore/"], a[href^="/explore/"],
-            a[href="/reels/"], a[href^="/reels/"] { display: none !important; }
-        """.trimIndent().replace("\n", " ")
-        val js = """
-            (function () {
-              if (document.getElementById('instadm-hide')) return;
-              var s = document.createElement('style');
-              s.id = 'instadm-hide';
-              s.textContent = ${jsString(css)};
-              (document.head || document.documentElement).appendChild(s);
-            })();
-        """.trimIndent()
+    private fun installPageScript(view: WebView) {
+        val js = assets.open("instadm-page.js").bufferedReader().use { it.readText() }
         if (WebViewFeature.isFeatureSupported(WebViewFeature.DOCUMENT_START_SCRIPT)) {
-            WebViewCompat.addDocumentStartJavaScript(view, js, setOf("https://www.instagram.com"))
+            @Suppress("DEPRECATION") // still the supported API in androidx.webkit 1.8
+            WebViewCompat.addDocumentStartJavaScript(
+                view,
+                js,
+                setOf("https://www.instagram.com", "https://instagram.com", "https://m.instagram.com"),
+            )
         } else {
             pendingFallbackJs = js
         }
@@ -254,8 +248,5 @@ class MainActivity : AppCompatActivity() {
     private companion object {
         const val MAX_BOUNCES = 4
         const val BOUNCE_WINDOW_MS = 10_000L
-
-        fun jsString(s: String): String =
-            "'" + s.replace("\\", "\\\\").replace("'", "\\'") + "'"
     }
 }

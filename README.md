@@ -12,8 +12,13 @@ WebView. Every page the site tries to open is checked first:
 | Anything else on Instagram: feed, Reels, Explore, posts, profiles, stories | Blocked, with a short message |
 | Other websites (links people send you) | Open in your phone's browser |
 
-The Home, Explore and Reels buttons are also hidden, so there's nothing to tap.
-That part is cosmetic; the pages are blocked even if Instagram changes its buttons.
+The Home, Explore and Reels buttons are also hidden, so there's nothing to tap, and
+"Open the app" / "Use the app" banners and pop-ups are removed (pop-ups are closed with
+their own "Not now" button where they have one). That part is cosmetic, in
+[`instadm-page.js`](app/src/main/assets/instadm-page.js); the pages themselves are
+blocked even if Instagram changes its buttons. The banner remover only acts on boxes
+pinned to the screen and never on anything containing the message box or a
+conversation, so it can't hide your chats.
 
 ## Permissions
 
@@ -24,7 +29,8 @@ Your login stays in the app's own WebView cookies, on the phone.
 
 - **No message notifications.** WebViews can't receive Instagram's web push, so you see
   new messages when you open the app.
-- Voice notes and calls aren't supported (no microphone permission).
+- You can play voice notes people send you, but not record them, and calls aren't
+  supported (no microphone permission, on purpose).
 - A reel or post someone sends you is blocked when tapped, by design.
 - Instagram may change its website at any time; if a DM page ever gets blocked by mistake,
   the rules are in one place: [`UrlPolicy.kt`](app/src/main/java/io/github/sahilkoditkar/instadm/UrlPolicy.kt).
@@ -47,3 +53,13 @@ keyPassword=...
 ```
 
 The APK is written to `app/build/outputs/apk/release/app-release.apk`.
+
+### Testing the page script
+
+[`tools/page-script-test`](tools/page-script-test) loads a mock page with banners,
+pop-ups, a DM header and chat messages that mention "the app", runs the script in
+Chromium (Playwright) and checks that only the banners go:
+
+```bash
+node tools/page-script-test/run.js
+```
