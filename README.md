@@ -76,3 +76,15 @@ locked:
 node tools/page-script-test/run.js
 node tools/page-script-test/reel-test.js
 ```
+
+### Performance profile
+
+[`tools/perf/profile.js`](tools/perf/profile.js) runs an Instagram-shaped stress page
+(~6,600 elements, live typing, incoming messages, inline videos, a reel viewer) in
+Chromium with the CPU slowed 4x, once without and once with the page script, and reports
+what the script adds: CPU time, long tasks, JS memory after garbage collection, and any
+network requests (expected: none).
+
+```bash
+node tools/perf/profile.js --throttle 4 --seconds 30
+```

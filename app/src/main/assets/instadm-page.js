@@ -20,7 +20,8 @@
 (function () {
   'use strict';
   if (window.__instadm) return;
-  window.__instadm = { hidden: 0, dismissed: 0 };
+  // Counters, readable from devtools/tests: what the script did and what it cost.
+  window.__instadm = { hidden: 0, dismissed: 0, scans: 0, scanMs: 0, maxScanMs: 0 };
 
   var HIDE_CSS =
     'a[href="/"], a[href="/explore/"], a[href^="/explore/"],' +
@@ -194,16 +195,93 @@
     hide(outermostWrapper(box));
   }
 
-  function scan() {
-    addStyle();
-    var body = document.body;
-    if (!body) return;
-    var walker = document.createTreeWalker(body, NodeFilter.SHOW_TEXT, null, false);
-    var matches = [];
+  // ---- Scanning --------------------------------------------------------------
+  // The first scan walks the whole page. After that only what changed is
+  // checked (new elements, edited text outside the message box), with a full
+  // re-check at most every FULL_SCAN_MS as a safety net. Typing in the
+  // message box is ignored entirely: it can't create a banner.
+  var FULL_SCAN_MS = 5000;
+  var MAX_DIRTY = 400; // more changes than this at once: just re-check everything
+  var dirty = [];
+  var needFull = true;
+  var lastFull = 0;
+
+  function inEditable(node) {
+    var el = node.nodeType === 1 ? node : node.parentElement;
+    return !!(el && el.closest && el.closest('[contenteditable="true"], [role="textbox"], textarea, input'));
+  }
+
+  function onMutations(records) {
+    for (var i = 0; i < records.length; i++) {
+      var r = records[i];
+      if (r.type === 'childList') {
+        for (var j = 0; j < r.addedNodes.length; j++) {
+          var n = r.addedNodes[j];
+          if ((n.nodeType === 1 || n.nodeType === 3) && !inEditable(n)) dirty.push(n);
+        }
+      } else if (r.type === 'characterData' && !inEditable(r.target)) {
+        dirty.push(r.target);
+      }
+    }
+    if (dirty.length > MAX_DIRTY) { dirty = []; needFull = true; }
+    if (dirty.length || needFull) schedule();
+  }
+
+  var editableFilter = {
+    acceptNode: function (n) {
+      if (n.nodeType === 3) return NodeFilter.FILTER_ACCEPT;
+      // Skip the message box and everything inside it.
+      if (n.isContentEditable || n.tagName === 'TEXTAREA' || n.tagName === 'INPUT' ||
+          (n.getAttribute && n.getAttribute('role') === 'textbox')) {
+        return NodeFilter.FILTER_REJECT;
+      }
+      return NodeFilter.FILTER_SKIP;
+    },
+  };
+
+  function collectMatches(root, out) {
+    if (root.nodeType === 3) {
+      var tv = root.nodeValue;
+      if (tv && tv.length <= MAX_MATCH_TEXT && APP_TEXT.test(tv)) out.push(root);
+      return;
+    }
+    var walker = document.createTreeWalker(root, NodeFilter.SHOW_ELEMENT | NodeFilter.SHOW_TEXT, editableFilter, false);
     var node;
     while ((node = walker.nextNode())) {
       var v = node.nodeValue;
-      if (v && v.length <= MAX_MATCH_TEXT && APP_TEXT.test(v)) matches.push(node);
+      if (v && v.length <= MAX_MATCH_TEXT && APP_TEXT.test(v)) out.push(node);
+    }
+  }
+
+  function scan() {
+    var t0 = performance.now();
+    try { scanInner(); } finally {
+      var ms = performance.now() - t0;
+      var st = window.__instadm;
+      st.scans++;
+      st.scanMs += ms;
+      if (ms > st.maxScanMs) st.maxScanMs = ms;
+    }
+  }
+
+  function scanInner() {
+    addStyle();
+    var body = document.body;
+    if (!body) return;
+    var now = Date.now();
+    if (!needFull && dirty.length && now - lastFull > FULL_SCAN_MS) needFull = true;
+    var roots;
+    if (needFull) {
+      roots = [body];
+      needFull = false;
+      lastFull = now;
+    } else {
+      roots = dirty;
+    }
+    dirty = [];
+    var matches = [];
+    for (var r = 0; r < roots.length; r++) {
+      if (roots[r].isConnected) collectMatches(roots[r], matches);
     }
     for (var i = 0; i < matches.length; i++) {
       try { handleMatch(matches[i]); } catch (e) { /* never break the page */ }
@@ -324,7 +402,7 @@
   addStyle();
   function start() {
     scan();
-    new MutationObserver(schedule).observe(document.documentElement, {
+    new MutationObserver(onMutations).observe(document.documentElement, {
       childList: true, subtree: true, characterData: true,
     });
   }
